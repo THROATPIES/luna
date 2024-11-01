@@ -52,6 +52,7 @@ pub struct ModelResponse {
 pub struct ChatQuery {
     pub prompt: String,
     pub generate_image: Option<bool>,
+    pub session: Option<bool>,
 }
 
 #[derive(Deserialize)]

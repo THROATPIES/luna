@@ -18,14 +18,24 @@ pub async fn start_chat(
 ) -> impl Responder {
     let prompt = query.prompt.clone();
     let generate_image = query.generate_image.unwrap_or(false);
-    let mut message_store = state.message_store.lock().unwrap();
+    let is_sessioned = query.session.unwrap_or(false);
 
-    // Add user message to the store
-    let user_message = ChatMessage::user(prompt.clone());
-    message_store.add_message(user_message.clone());
+    let mut messages: Vec<ChatMessage> = Vec::new();
 
-    // Get recent messages for the API request
-    let messages: Vec<ChatMessage> = message_store.get_recent_messages();
+    if is_sessioned {
+        let mut message_store = state.message_store.lock().unwrap();
+
+        // Add user message to the store
+        let user_message = ChatMessage::user(prompt.clone());
+        message_store.add_message(user_message.clone());
+
+        // Get recent messages for the API request
+        messages = message_store.get_recent_messages();
+    } else {
+        // If not sessioned, just use the current prompt as the only message
+        messages.push(ChatMessage::user(prompt.clone()));
+    }
+
     let options = GenerationOptions::default()
         .num_ctx(CONTEXT)
         .repeat_penalty(REPEAT_PENALTY)
@@ -35,9 +45,7 @@ pub async fn start_chat(
 
     match res {
         Ok(response) => {
-            // Add assistant message to the store
-            let assistant_message =
-                ChatMessage::assistant(response.message.clone().unwrap().content.clone());
+            let assistant_message = ChatMessage::assistant(response.message.clone().unwrap().content.clone());
             let schema_fill = ModelResponse {
                 prompt: prompt.clone(),
                 model: response.model.clone(),
@@ -79,16 +87,22 @@ pub async fn start_chat(
                 }
             }
 
-            // Create record in database
-            let created: Option<GeneratedRecord> =
-                state.db.create("chat").content(schema_fill).await.unwrap();
-            dbg!("/chat: created", created);
-            message_store.add_message(assistant_message);
-            HttpResponse::Ok().json(response)
-        }
-        Err(e) => {
-            dbg!("/chat: err", &e);
-            HttpResponse::InternalServerError().json(json!({ "error": e.to_string() }))
-        }
-    }
+             // Create record in database
+             let created: Option<GeneratedRecord> =
+             state.db.create("chat").content(schema_fill).await.unwrap();
+         dbg!("/chat: created", created);
+
+         // Only add assistant message to the store if sessioned
+         if is_sessioned {
+             let mut message_store = state.message_store.lock().unwrap();
+             message_store.add_message(assistant_message);
+         }
+
+         HttpResponse::Ok().json(response)
+     }
+     Err(e) => {
+         dbg!("/chat: err", &e);
+         HttpResponse::InternalServerError().json(json!({ "error": e.to_string() }))
+     }
+ }
 }
