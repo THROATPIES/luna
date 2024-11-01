@@ -1,4 +1,48 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Write};
+
+
+pub fn check_formatting_tool_needed(text: &str, assistant_message: &str) -> () {
+        let format_types = ["MARKDOWN", "HTML", "JSON"];
+        for format_type in format_types {
+            if text.contains(format_type) {
+                send_to_tool(text, format_type, assistant_message);
+            }
+        }
+}
+
+fn send_to_tool(text: &str, formatted_type: &str, assistant_message: &str) -> () {
+    let f_types = [".md", ".html", ".json"];
+    match formatted_type {
+        "MARKDOWN" => {
+            let file_name = format!("{}{}", uuid::Uuid::new_v4(), f_types[0]);
+            let output_folder_path = "./outputs/markdown/";
+            let output_file_path = format!("{}/{}", output_folder_path, file_name);
+            let mut file = std::fs::File::create(output_file_path.clone()).unwrap();
+            file.write_all(assistant_message.as_bytes())
+                .unwrap();
+            println!("Created Markdown file: {}", output_file_path.clone());
+        } 
+        "HTML" => {
+            let file_name = format!("{}{}", uuid::Uuid::new_v4(), f_types[1]);
+            let output_folder_path = "./outputs/html/";
+            let output_file_path = format!("{}/{}", output_folder_path, file_name);
+            let mut file = std::fs::File::create(output_file_path.clone()).unwrap();
+            file.write_all(assistant_message.as_bytes())
+                .unwrap();
+            println!("Created HTML file: {}", output_file_path.clone());
+        }
+        "JSON" => {
+            let file_name = format!("{}{}", uuid::Uuid::new_v4(), f_types[2]);
+            let output_folder_path = "./outputs/json/";
+            let output_file_path = format!("{}/{}", output_folder_path, file_name);
+            let mut file = std::fs::File::create(output_file_path.clone()).unwrap();
+            file.write_all(assistant_message.as_bytes())
+                .unwrap();
+            println!("Created JSON file: {}", output_file_path.clone());
+        }
+        _ => {}
+    }
+}
 
 pub fn create_negative_prompts() -> HashMap<String, Vec<String>> {
     let mut negative_prompts = HashMap::new();

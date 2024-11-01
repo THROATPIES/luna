@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use actix_web::{web, HttpResponse, Responder};
 use ollama_rs::generation::{
     chat::{request::ChatMessageRequest, ChatMessage},
@@ -7,8 +9,7 @@ use ollama_rs::generation::{
 use serde_json::json;
 
 use crate::{
-    structs::{AppState, ChatQuery, GeneratedRecord, ModelResponse},
-    CONTEXT, REPEAT_PENALTY, TARGET_MODEL, TEMPERATURE,
+    structs::{AppState, ChatQuery, GeneratedRecord, ModelResponse}, utils::check_formatting_tool_needed, CONTEXT, REPEAT_PENALTY, TARGET_MODEL, TEMPERATURE
 };
 
 #[actix_web::get("/chat")]
@@ -19,9 +20,10 @@ pub async fn start_chat(
     let prompt = query.prompt.clone();
     let generate_image = query.generate_image.unwrap_or(false);
     let is_sessioned = query.session.unwrap_or(false);
-
     let mut messages: Vec<ChatMessage> = Vec::new();
 
+    
+    
     if is_sessioned {
         let mut message_store = state.message_store.lock().unwrap();
 
@@ -91,6 +93,8 @@ pub async fn start_chat(
              let created: Option<GeneratedRecord> =
              state.db.create("chat").content(schema_fill).await.unwrap();
          dbg!("/chat: created", created);
+
+         check_formatting_tool_needed(&prompt, &assistant_message.content);
 
          // Only add assistant message to the store if sessioned
          if is_sessioned {
