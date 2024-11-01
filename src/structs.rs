@@ -53,12 +53,6 @@ pub struct ChatQuery {
     pub prompt: String,
     pub generate_image: Option<bool>,
     pub session: Option<bool>,
-    
-}
-
-#[derive(Deserialize)]
-pub struct FormattedOutput {
-    pub file_ext: String,
 }
 
 #[derive(Deserialize)]

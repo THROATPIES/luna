@@ -1,4 +1,3 @@
-
 pub const TARGET_MODEL: &str = "llama3.2:latest";
 
 pub const LOCAL_OLLAMA_HOST: (&str, u16) = ("http://127.0.0.1", 11434);
