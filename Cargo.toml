@@ -1,0 +1,18 @@
+[package]
+name = "luna"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ollama-rs = "0.2.1"
+tokio = { version = "1.41.0", features = ["full"] }
+actix-web = "4"
+serde_json = "1.0.132"
+serde = "1.0.213"
+surrealdb = "2.0.4"
+reqwest = "0.12.8"
+image-base64-wasm = "0.6.0"
+uuid = "1.11.0"
+base64 = "0.22.1"
+image = "0.25.4"
+futures = "0.3.31"
