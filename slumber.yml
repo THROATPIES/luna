@@ -1,0 +1,22 @@
+# slumber.yml
+requests:
+
+  chat: !request
+    method: GET
+    url: http://127.0.0.1:8080/chat?
+
+  current_conversation: !request
+    method: GET
+    url: http://127.0.0.1:8080/chat/current-conversation
+
+  clear_conversation: !request
+    method: GET
+    url: http://127.0.0.1:8080/chat/clear-conversation
+
+  generate_image: !request
+    method: GET
+    url: http://127.0.0.1:8080/generate-image?positive=&negative=null&steps=10
+
+  list_models: !request
+    method: GET
+    url: http://127.0.0.1:8080/models/list
