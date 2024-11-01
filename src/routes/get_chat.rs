@@ -1,4 +1,3 @@
-use std::io::Write;
 
 use actix_web::{web, HttpResponse, Responder};
 use ollama_rs::generation::{
@@ -9,7 +8,9 @@ use ollama_rs::generation::{
 use serde_json::json;
 
 use crate::{
-    structs::{AppState, ChatQuery, GeneratedRecord, ModelResponse}, utils::check_formatting_tool_needed, CONTEXT, REPEAT_PENALTY, TARGET_MODEL, TEMPERATURE
+    structs::{AppState, ChatQuery, GeneratedRecord, ModelResponse},
+    utils::check_formatting_tool_needed,
+    CONTEXT, REPEAT_PENALTY, TARGET_MODEL, TEMPERATURE,
 };
 
 #[actix_web::get("/chat")]
@@ -22,8 +23,6 @@ pub async fn start_chat(
     let is_sessioned = query.session.unwrap_or(false);
     let mut messages: Vec<ChatMessage> = Vec::new();
 
-    
-    
     if is_sessioned {
         let mut message_store = state.message_store.lock().unwrap();
 
@@ -47,7 +46,8 @@ pub async fn start_chat(
 
     match res {
         Ok(response) => {
-            let assistant_message = ChatMessage::assistant(response.message.clone().unwrap().content.clone());
+            let assistant_message =
+                ChatMessage::assistant(response.message.clone().unwrap().content.clone());
             let schema_fill = ModelResponse {
                 prompt: prompt.clone(),
                 model: response.model.clone(),
@@ -89,24 +89,24 @@ pub async fn start_chat(
                 }
             }
 
-             // Create record in database
-             let created: Option<GeneratedRecord> =
-             state.db.create("chat").content(schema_fill).await.unwrap();
-         dbg!("/chat: created", created);
+            // Create record in database
+            let created: Option<GeneratedRecord> =
+                state.db.create("chat").content(schema_fill).await.unwrap();
+            dbg!("/chat: created", created);
 
-         check_formatting_tool_needed(&prompt, &assistant_message.content);
+            check_formatting_tool_needed(&prompt, &assistant_message.content);
 
-         // Only add assistant message to the store if sessioned
-         if is_sessioned {
-             let mut message_store = state.message_store.lock().unwrap();
-             message_store.add_message(assistant_message);
-         }
+            // Only add assistant message to the store if sessioned
+            if is_sessioned {
+                let mut message_store = state.message_store.lock().unwrap();
+                message_store.add_message(assistant_message);
+            }
 
-         HttpResponse::Ok().json(response)
-     }
-     Err(e) => {
-         dbg!("/chat: err", &e);
-         HttpResponse::InternalServerError().json(json!({ "error": e.to_string() }))
-     }
- }
+            HttpResponse::Ok().json(response)
+        }
+        Err(e) => {
+            dbg!("/chat: err", &e);
+            HttpResponse::InternalServerError().json(json!({ "error": e.to_string() }))
+        }
+    }
 }
